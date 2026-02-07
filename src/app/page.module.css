@@ -573,6 +573,112 @@
   transform: rotate(-45deg);
 }
 
+.hologramEffect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.1;
+  background: 
+    linear-gradient(90deg, transparent 49%, var(--hologram-blue) 50%, transparent 51%),
+    linear-gradient(0deg, transparent 49%, var(--hologram-green) 50%, transparent 51%);
+  background-size: 100px 100px;
+  animation: hologram 3s infinite;
+}
+
+.dataStream {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    linear-gradient(0deg, 
+      transparent 0%, 
+      var(--hologram-blue) 2%, 
+      transparent 4%,
+      transparent 96%,
+      var(--hologram-green) 98%,
+      transparent 100%
+    );
+  background-size: 100% 200%;
+  animation: matrixRain 10s linear infinite;
+}
+
+.glitchText {
+  animation: glitchText 0.3s infinite;
+  position: relative;
+  display: inline-block;
+}
+
+.glitchText::before,
+.glitchText::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitchText::before {
+  color: var(--cyber-red);
+  animation: glitchText 0.2s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+}
+
+.glitchText::after {
+  color: var(--cyber-purple);
+  animation: glitchText 0.15s infinite reverse;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+}
+
+.holographicPanel {
+  background: linear-gradient(135deg, 
+    rgba(0, 200, 255, 0.1), 
+    rgba(0, 255, 150, 0.1),
+    rgba(157, 0, 255, 0.1)
+  );
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.holographicPanel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--hologram-blue), 
+    var(--hologram-green),
+    transparent
+  );
+  animation: scan 2s linear infinite;
+}
+
+.dataStreamLine {
+  position: absolute;
+  width: 2px;
+  height: 100px;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    var(--accent), 
+    transparent
+  );
+  box-shadow: 0 0 20px var(--accent-glow);
+  animation: dataStream 3s linear infinite;
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 24px 16px 120px;
