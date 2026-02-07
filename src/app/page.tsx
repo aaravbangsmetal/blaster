@@ -28,11 +28,21 @@ type VideoResult = {
   description?: string;
 };
 
+type NewsResult = {
+  title: string;
+  url: string;
+  snippet?: string;
+  source?: string;
+  date?: string;
+  image?: string;
+};
+
 type SearchResponse = {
   query: string;
   web: WebResult[];
   images: ImageResult[];
   videos: VideoResult[];
+  news: NewsResult[];
   fetchedAt: string;
 };
 
@@ -96,7 +106,7 @@ export default function Home() {
 
   const metaLine = () => {
     if (!result) return "";
-    const total = result.web.length + result.images.length + result.videos.length;
+    const total = result.web.length + result.images.length + result.videos.length + result.news.length;
     return `About ${total.toLocaleString()} results (0.45 seconds)`;
   };
 
@@ -344,7 +354,33 @@ export default function Home() {
 
         {result && !loading && activeTab === "news" && (
           <div className={styles.newsResults}>
-            <p className={styles.emptyMessage}>News results coming soon</p>
+            {result.news.length === 0 && (
+              <p className={styles.emptyMessage}>No news found</p>
+            )}
+            <div className={styles.newsGrid}>
+              {result.news.map((item, index) => (
+                <div key={`${item.url}-${index}`} className={styles.newsCard}>
+                  {item.image && (
+                    <a href={item.url} target="_blank" rel="noreferrer">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        loading="lazy"
+                        className={styles.newsImage}
+                      />
+                    </a>
+                  )}
+                  <div className={styles.newsInfo}>
+                    <div className={styles.newsSource}>{item.source ?? getHost(item.url)}</div>
+                    <a href={item.url} className={styles.newsTitle} target="_blank" rel="noreferrer">
+                      {item.title}
+                    </a>
+                    {item.snippet && <p className={styles.newsSnippet}>{item.snippet}</p>}
+                    {item.date && <div className={styles.newsDate}>{item.date}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

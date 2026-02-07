@@ -17,6 +17,17 @@
   --logo-green: #34a853;
   --font-roboto: "Roboto", "Arial", sans-serif;
   --font-google-sans: "Google Sans", "Arial", sans-serif;
+  --font-size-small: 12px;
+  --font-size-medium: 14px;
+  --font-size-large: 16px;
+  --font-size-xlarge: 20px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --border-radius: 8px;
+  --border-radius-full: 999px;
 }
 
 * {

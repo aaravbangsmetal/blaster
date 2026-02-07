@@ -6,13 +6,6 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        './_global-error': false
-      }
-    }
   }
 }
 
