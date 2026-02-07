@@ -1,4 +1,4 @@
-/* Google-like styles */
+/* Blaster - Pixelated Search Engine */
 
 .page {
   min-height: 100vh;
@@ -27,18 +27,31 @@
   flex: 1;
 }
 
-.googleLogo {
+.blasterLogo {
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 700;
   display: flex;
-  gap: 1px;
-  letter-spacing: -1px;
+  gap: 2px;
+  letter-spacing: 1px;
+  font-family: var(--font-pixel);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
 }
 
-.logoBlue { color: var(--logo-blue); }
-.logoRed { color: var(--logo-red); }
-.logoYellow { color: var(--logo-yellow); }
-.logoGreen { color: var(--logo-green); }
+.logoPixel {
+  display: inline-block;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.logoPixel:nth-child(1) { color: var(--logo-blue); }
+.logoPixel:nth-child(2) { color: var(--logo-cyan); }
+.logoPixel:nth-child(3) { color: var(--logo-green); }
+.logoPixel:nth-child(4) { color: var(--logo-yellow); }
+.logoPixel:nth-child(5) { color: var(--logo-orange); }
+.logoPixel:nth-child(6) { color: var(--logo-red); }
+.logoPixel:nth-child(7) { color: var(--logo-purple); }
 
 .headerSearch {
   flex: 1;
@@ -143,10 +156,11 @@
   width: 100%;
 }
 
-.homeContainer .googleLogo {
-  font-size: 92px;
-  font-weight: 400;
-  letter-spacing: -4px;
+.homeContainer .blasterLogo {
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  gap: 4px;
 }
 
 .searchForm {
@@ -159,12 +173,39 @@
 .searchBar {
   display: flex;
   align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--border-radius-full);
+  background: rgba(0, 0, 0, 0.05);
+  border: 3px solid var(--logo-blue);
+  border-radius: 0;
   padding: 0 var(--spacing-md);
-  height: 44px;
-  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+  height: 48px;
+  box-shadow: 
+    4px 4px 0px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.searchBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    var(--logo-blue), 
+    var(--logo-cyan), 
+    var(--logo-green), 
+    var(--logo-yellow), 
+    var(--logo-orange), 
+    var(--logo-red), 
+    var(--logo-purple));
+  animation: scanline 3s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .searchIcon {
@@ -186,8 +227,15 @@
   outline: none;
   background: transparent;
   font-size: var(--font-size-large);
+  font-family: var(--font-pixel);
   color: var(--text);
   height: 100%;
+  letter-spacing: 1px;
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+  font-style: italic;
 }
 
 .clearButton {
@@ -240,28 +288,48 @@
   gap: var(--spacing-md);
 }
 
-.googleButton,
+.blasterButton,
 .luckyButton {
-  background: #f8f9fa;
-  border: 1px solid #f8f9fa;
-  border-radius: var(--border-radius);
-  color: #3c4043;
+  background: linear-gradient(135deg, var(--logo-blue), var(--logo-purple));
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  color: white;
   font-size: var(--font-size-medium);
+  font-weight: 700;
+  font-family: var(--font-pixel);
   padding: 0 var(--spacing-lg);
-  height: 36px;
+  height: 40px;
   cursor: pointer;
-  min-width: 120px;
+  min-width: 140px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-.googleButton:hover,
+.blasterButton:hover,
 .luckyButton:hover {
-  border: 1px solid var(--line);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0px rgba(0, 0, 0, 0.2);
 }
 
-.googleButton:disabled {
+.blasterButton:active,
+.luckyButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+.blasterButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.2);
+}
+
+.luckyButton {
+  background: linear-gradient(135deg, var(--logo-orange), var(--logo-red));
 }
 
 .homeFooter {
@@ -688,12 +756,13 @@
   margin-top: var(--spacing-xl);
 }
 
-.googleLogoSmall {
+.blasterLogoSmall {
   font-size: var(--font-size-xlarge);
-  font-weight: 500;
+  font-weight: 700;
   display: flex;
-  gap: 1px;
-  letter-spacing: -1px;
+  gap: 2px;
+  letter-spacing: 1px;
+  font-family: var(--font-pixel);
 }
 
 .paginationNumbers {

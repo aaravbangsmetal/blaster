@@ -110,14 +110,15 @@ export default function Home() {
     return `About ${total.toLocaleString()} results (0.45 seconds)`;
   };
 
-  const renderGoogleLogo = () => (
-    <div className={styles.googleLogo}>
-      <span className={styles.logoBlue}>G</span>
-      <span className={styles.logoRed}>o</span>
-      <span className={styles.logoYellow}>o</span>
-      <span className={styles.logoBlue}>g</span>
-      <span className={styles.logoGreen}>l</span>
-      <span className={styles.logoRed}>e</span>
+  const renderBlasterLogo = () => (
+    <div className={styles.blasterLogo}>
+      <span className={styles.logoPixel}>B</span>
+      <span className={styles.logoPixel}>L</span>
+      <span className={styles.logoPixel}>A</span>
+      <span className={styles.logoPixel}>S</span>
+      <span className={styles.logoPixel}>T</span>
+      <span className={styles.logoPixel}>E</span>
+      <span className={styles.logoPixel}>R</span>
     </div>
   );
 
@@ -131,7 +132,7 @@ export default function Home() {
         </div>
         <input
           type="search"
-          placeholder="Search Google or type a URL"
+          placeholder="Blast your search across the web"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className={styles.searchInput}
@@ -163,11 +164,11 @@ export default function Home() {
         </div>
       </div>
       <div className={styles.searchButtons}>
-        <button className={styles.googleButton} type="submit" disabled={loading}>
-          {loading ? "Searching..." : "Google Search"}
+        <button className={styles.blasterButton} type="submit" disabled={loading}>
+          {loading ? "BLASTING..." : "BLAST SEARCH"}
         </button>
         <button className={styles.luckyButton} type="button">
-          I'm Feeling Lucky
+          I'M FEELING BLASTED
         </button>
       </div>
     </form>
@@ -176,9 +177,9 @@ export default function Home() {
   const renderHeader = () => (
     <header className={styles.header}>
       <div className={styles.headerLeft}>
-        {renderGoogleLogo()}
+        {renderBlasterLogo()}
         {showResults && (
-          <div className={styles.headerSearch}>
+          <form className={styles.headerSearch} onSubmit={handleSubmit}>
             <div className={styles.headerSearchBar}>
               <div className={styles.headerSearchIcon}>
                 <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -191,9 +192,14 @@ export default function Home() {
                 onChange={(event) => setQuery(event.target.value)}
                 className={styles.headerSearchInput}
                 aria-label="Search"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleSubmit(event as any);
+                  }
+                }}
               />
             </div>
-          </div>
+          </form>
         )}
       </div>
       <div className={styles.headerRight}>
@@ -203,7 +209,7 @@ export default function Home() {
           </svg>
         </button>
         <button className={styles.profileButton}>
-          <div className={styles.profileIcon}>G</div>
+          <div className={styles.profileIcon}>B</div>
         </button>
       </div>
     </header>
@@ -386,13 +392,14 @@ export default function Home() {
 
         {result && result.web.length > 0 && (
           <div className={styles.pagination}>
-            <div className={styles.googleLogoSmall}>
-              <span className={styles.logoBlue}>G</span>
-              <span className={styles.logoRed}>o</span>
-              <span className={styles.logoYellow}>o</span>
-              <span className={styles.logoBlue}>g</span>
-              <span className={styles.logoGreen}>l</span>
-              <span className={styles.logoRed}>e</span>
+            <div className={styles.blasterLogoSmall}>
+              <span className={styles.logoPixel}>B</span>
+              <span className={styles.logoPixel}>L</span>
+              <span className={styles.logoPixel}>A</span>
+              <span className={styles.logoPixel}>S</span>
+              <span className={styles.logoPixel}>T</span>
+              <span className={styles.logoPixel}>E</span>
+              <span className={styles.logoPixel}>R</span>
             </div>
             <div className={styles.paginationNumbers}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -401,7 +408,7 @@ export default function Home() {
                 </a>
               ))}
               <a href="#" className={styles.nextPage}>
-                Next
+                NEXT
               </a>
             </div>
           </div>
@@ -435,7 +442,7 @@ export default function Home() {
         </div>
       </div>
       <div className={styles.signature}>
-        MADE BY RANDOM MF FROM G BLOCK 758
+        BLASTER SEARCH • PIXELATED POWER • BLAST YOUR QUERIES
       </div>
     </footer>
   );
@@ -444,13 +451,13 @@ export default function Home() {
     <div className={styles.page}>
       {renderHeader()}
       
-      {!showResults ? (
+        {!showResults ? (
         <div className={styles.homeContainer}>
           <div className={styles.homeContent}>
-            {renderGoogleLogo()}
+            {renderBlasterLogo()}
             {renderSearchBar()}
             <div className={styles.homeFooter}>
-              <p>Google offered in: <a href="#">Español</a></p>
+              <p>Blaster Search - Pixelated Power</p>
             </div>
           </div>
         </div>
