@@ -1,6 +1,6 @@
 # Blaster Search
 
-A simple Google-like search UI that crawls recent web pages, summarizes them with DeepSeek, and shows cited sources.
+A simple Google-like search UI that shows live web results, images, and videos.
 
 ## Setup
 
@@ -10,13 +10,7 @@ A simple Google-like search UI that crawls recent web pages, summarizes them wit
 npm install
 ```
 
-2. Add your DeepSeek API key in `.env.local`:
-
-```bash
-DEEPSEEK_API_KEY=your_key_here
-```
-
-3. Start the dev server:
+2. Start the dev server:
 
 ```bash
 npm run dev
@@ -26,5 +20,4 @@ Open http://localhost:3000.
 
 ## Notes
 
-- Search uses DuckDuckGo's Instant Answer API to discover URLs.
-- The crawler fetches a few top pages and summarizes with the LLM.
+- Web results, images, and videos are fetched from DuckDuckGo.

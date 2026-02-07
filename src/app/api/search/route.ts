@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { crawlPages, searchWeb, synthesizeAnswer } from "@/lib/crawler";
+import { searchImages, searchVideos, searchWeb, searchNews } from "@/lib/search";
 
 export const runtime = "nodejs";
 
@@ -12,32 +12,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Query is required." }, { status: 400 });
     }
 
-    const results = await searchWeb(query);
-    if (results.length === 0) {
-      return NextResponse.json({
-        query,
-        answer: "No results found. Try a different search.",
-        sources: [],
-        fetchedAt: new Date().toISOString(),
-      });
-    }
-
-    const pages = await crawlPages(results);
-    if (pages.length === 0) {
-      return NextResponse.json({
-        query,
-        answer: "Results were found, but the crawler could not read any pages.",
-        sources: [],
-        fetchedAt: new Date().toISOString(),
-      });
-    }
-
-    const answer = await synthesizeAnswer(query, pages);
+    const [web, images, videos, news] = await Promise.all([
+      searchWeb(query),
+      searchImages(query),
+      searchVideos(query),
+      searchNews(query),
+    ]);
 
     return NextResponse.json({
       query,
-      answer,
-      sources: pages.map(({ title, url, snippet }) => ({ title, url, snippet })),
+      web,
+      images,
+      videos,
+      news,
       fetchedAt: new Date().toISOString(),
     });
   } catch (error) {
