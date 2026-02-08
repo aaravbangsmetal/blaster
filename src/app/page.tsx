@@ -1,476 +1,401 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import styles from "./page.module.css";
+import { ExportUtils } from "@/lib/export-utils";
+import AnalyticsChart from "@/components/AnalyticsChart";
 
-type WebResult = {
-  title: string;
+type TweetResult = {
+  id: string;
+  text: string;
+  author: {
+    username: string;
+    name: string;
+    profileImageUrl?: string;
+  };
+  createdAt: string;
   url: string;
-  snippet?: string;
+  retweetCount: number;
+  likeCount: number;
+  replyCount: number;
+  quoteCount?: number;
+  media?: {
+    type: string;
+    url: string;
+  }[];
 };
 
-type ImageResult = {
-  title: string;
-  url: string;
-  image: string;
-  thumbnail?: string;
-  source?: string;
-  width?: number;
-  height?: number;
-};
-
-type VideoResult = {
-  title: string;
-  url: string;
-  thumbnail?: string;
-  source?: string;
-  duration?: string;
-  description?: string;
-};
-
-type NewsResult = {
-  title: string;
-  url: string;
-  snippet?: string;
-  source?: string;
-  date?: string;
-  image?: string;
-};
-
-type SearchResponse = {
+type CrawlResponse = {
   query: string;
-  web: WebResult[];
-  images: ImageResult[];
-  videos: VideoResult[];
-  news: NewsResult[];
-  fetchedAt: string;
+  tweets: TweetResult[];
+  summary: string;
+  crawledAt: string;
 };
 
-type TabId = "all" | "images" | "videos" | "news";
-
-const tabs: Array<{ id: TabId; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "images", label: "Images" },
-  { id: "videos", label: "Videos" },
-  { id: "news", label: "News" },
-];
-
-const getHost = (url: string) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
+type ApiResponse = {
+  success: boolean;
+  results: CrawlResponse[];
+  totalCrawls: number;
+  crawledAt: string;
+  error?: string;
 };
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<SearchResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>("all");
-  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState<CrawlResponse[]>([]);
+  const [activeResultIndex, setActiveResultIndex] = useState(0);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = query.trim();
-    if (!trimmed) return;
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
 
     setLoading(true);
     setError("");
-    setResult(null);
-    setShowResults(true);
+    setResults([]);
 
     try {
-      const response = await fetch("/api/search", {
+      const response = await fetch("/api/crawl", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: query.trim() }),
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error || "Search failed. Try again.");
+      const data: ApiResponse = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to crawl tweets");
       }
 
-      const payload = (await response.json()) as SearchResponse;
-      setResult(payload);
-      setActiveTab("all");
+      setResults(data.results);
+      setActiveResultIndex(0);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Search failed.";
-      setError(message);
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Search error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const metaLine = () => {
-    if (!result) return "";
-    const total = result.web.length + result.images.length + result.videos.length + result.news.length;
-    return `About ${total.toLocaleString()} results (0.45 seconds)`;
+  const handleMultiCrawl = async () => {
+    const queries = query.split(",").map(q => q.trim()).filter(Boolean);
+    if (queries.length === 0) return;
+
+    setLoading(true);
+    setError("");
+    setResults([]);
+
+    try {
+      const response = await fetch("/api/crawl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ queries }),
+      });
+
+      const data: ApiResponse = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to crawl tweets");
+      }
+
+      setResults(data.results);
+      setActiveResultIndex(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Multi-crawl error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderBlasterLogo = () => (
-    <div className={styles.blasterLogo}>
-      <span className={styles.logoPixel}>B</span>
-      <span className={styles.logoPixel}>L</span>
-      <span className={styles.logoPixel}>A</span>
-      <span className={styles.logoPixel}>S</span>
-      <span className={styles.logoPixel}>T</span>
-      <span className={styles.logoPixel}>E</span>
-      <span className={styles.logoPixel}>R</span>
-    </div>
-  );
+  const activeResult = results[activeResultIndex];
 
-  const renderSearchBar = () => (
-    <form className={styles.searchForm} onSubmit={handleSubmit}>
-      <div className={styles.searchBar}>
-        <div className={styles.searchIcon}>
-          <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-          </svg>
-        </div>
-        <input
-          type="search"
-          placeholder="Blast your search across the web"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          className={styles.searchInput}
-          aria-label="Search"
-        />
-        {query.length > 0 && (
-          <button
-            type="button"
-            className={styles.clearButton}
-            aria-label="Clear"
-            onClick={() => setQuery("")}
-          >
-            <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
-            </svg>
-          </button>
-        )}
-        <div className={styles.searchTools}>
-          <button type="button" className={styles.voiceButton} aria-label="Search by voice">
-            <svg focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"></path>
-            </svg>
-          </button>
-          <button type="button" className={styles.imageButton} aria-label="Search by image">
-            <svg focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 13l4 5H6l4-4 1.79 1.78L14 13zm-6.01-2.99A2 2 0 0 0 8 6a2 2 0 0 0-.01 4.01zM22 5v14a3 3 0 0 1-3 2.99H5c-1.64 0-3-1.36-3-3V5c0-1.64 1.36-3 3-3h14c1.65 0 3 1.36 3 3zm-2.01 0a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h7v-.01h7a1 1 0 0 0 1-1V5z"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div className={styles.searchButtons}>
-        <button className={styles.blasterButton} type="submit" disabled={loading}>
-          {loading ? "BLASTING..." : "BLAST SEARCH"}
-        </button>
-          <button className={styles.luckyButton} type="button">
-            I&apos;M FEELING BLASTED
-          </button>
-      </div>
-    </form>
-  );
+  const handleExportCSV = () => {
+    if (!activeResult) return;
+    const csv = ExportUtils.toCSV(activeResult.tweets);
+    ExportUtils.downloadFile(csv, `tweets_${activeResult.query}_${Date.now()}.csv`, 'text/csv');
+  };
 
-  const renderHeader = () => (
-    <header className={styles.header}>
-      <div className={styles.headerLeft}>
-        {renderBlasterLogo()}
-        {showResults && (
-          <form className={styles.headerSearch} onSubmit={handleSubmit}>
-            <div className={styles.headerSearchBar}>
-              <div className={styles.headerSearchIcon}>
-                <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-                </svg>
-              </div>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className={styles.headerSearchInput}
-                aria-label="Search"
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    const form = event.currentTarget.closest('form');
-                    if (form) {
-                      const formEvent = new Event('submit', { bubbles: true, cancelable: true });
-                      form.dispatchEvent(formEvent);
-                    }
-                  }
-                }}
-              />
-            </div>
-          </form>
-        )}
-      </div>
-      <div className={styles.headerRight}>
-        <button className={styles.headerButton}>
-          <svg focusable="false" viewBox="0 0 24 24">
-            <path d="M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z"></path>
-          </svg>
-        </button>
-        <button className={styles.profileButton}>
-          <div className={styles.profileIcon}>B</div>
-        </button>
-      </div>
-    </header>
-  );
+  const handleExportJSON = () => {
+    if (!activeResult) return;
+    const json = ExportUtils.toJSON(activeResult.tweets);
+    ExportUtils.downloadFile(json, `tweets_${activeResult.query}_${Date.now()}.json`, 'application/json');
+  };
 
-  const renderTabs = () => (
-    <div className={styles.tabsContainer}>
-      <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={activeTab === tab.id ? styles.tabActive : styles.tab}
-            onClick={() => setActiveTab(tab.id)}
-            disabled={!result}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <div className={styles.tools}>
-        <button className={styles.toolButton}>
-          <svg focusable="false" viewBox="0 0 24 24">
-            <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"></path>
-          </svg>
-          Tools
-        </button>
-      </div>
-    </div>
-  );
+  const handleExportAllCSV = () => {
+    if (results.length === 0) return;
+    const csv = ExportUtils.toSummaryCSV(results);
+    ExportUtils.downloadFile(csv, `all_crawls_summary_${Date.now()}.csv`, 'text/csv');
+  };
 
-  const renderResults = () => {
-    if (!showResults) return null;
+  const handleExportAnalytics = () => {
+    if (results.length === 0) return;
+    const analytics = ExportUtils.toAnalyticsJSON(results);
+    ExportUtils.downloadFile(analytics, `crawls_analytics_${Date.now()}.json`, 'application/json');
+  };
 
-    return (
-      <main className={styles.resultsContainer}>
-        {renderTabs()}
-        
-        <div className={styles.resultsInfo}>
-          <p className={styles.resultsCount}>{metaLine()}</p>
-        </div>
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Twitter/X Crawler</h1>
+        <p className={styles.subtitle}>
+          Search and analyze tweets in real-time. See who said what and when.
+        </p>
+      </header>
 
-        {loading && (
-          <div className={styles.loading}>
-            <div className={styles.loadingSpinner}></div>
-            <p>Searching...</p>
+      <main className={styles.main}>
+        <form onSubmit={handleSearch} className={styles.searchForm}>
+          <div className={styles.searchBox}>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search tweets or enter multiple queries separated by commas..."
+              className={styles.searchInput}
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              className={styles.searchButton}
+              disabled={loading || !query.trim()}
+            >
+              {loading ? "Crawling..." : "Search Tweets"}
+            </button>
           </div>
-        )}
-
-        {error && <p className={styles.error}>{error}</p>}
-
-        {!result && !loading && !error && (
-          <div className={styles.emptyState}>
-            <p>Search something to see results</p>
-          </div>
-        )}
-
-        {result && !loading && activeTab === "all" && (
-          <div className={styles.webResults}>
-            {result.web.length === 0 && (
-              <p className={styles.emptyMessage}>No results found</p>
-            )}
-             {result.web.map((item) => (
-              <div key={item.url} className={styles.resultItem}>
-                <div className={styles.resultUrl}>
-                  <span className={styles.resultFavicon}>🌐</span>
-                  <span>{getHost(item.url)}</span>
-                  <span className={styles.resultDropdown}>▼</span>
-                </div>
-                <a href={item.url} className={styles.resultTitle} target="_blank" rel="noreferrer">
-                  {item.title}
-                </a>
-                {item.snippet && <p className={styles.resultSnippet}>{item.snippet}</p>}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {result && !loading && activeTab === "images" && (
-          <div className={styles.imageResults}>
-            {result.images.length === 0 && (
-              <p className={styles.emptyMessage}>No images found</p>
-            )}
-            <div className={styles.imageGrid}>
-              {result.images.map((item, index) => (
-                <div key={`${item.url}-${index}`} className={styles.imageCard}>
-                  <a href={item.url} target="_blank" rel="noreferrer">
-                    <img
-                      src={item.thumbnail ?? item.image}
-                      alt={item.title}
-                      loading="lazy"
-                      className={styles.imageThumb}
-                    />
-                  </a>
-                  <div className={styles.imageInfo}>
-                    <a href={item.url} className={styles.imageTitle} target="_blank" rel="noreferrer">
-                      {item.title}
-                    </a>
-                    <div className={styles.imageSource}>{getHost(item.url)}</div>
-                  </div>
-                </div>
-              ))}
+          <div className={styles.searchOptions}>
+            <button
+              type="button"
+              onClick={handleMultiCrawl}
+              className={styles.multiCrawlButton}
+              disabled={loading || !query.includes(",")}
+              title={!query.includes(",") ? "Enter multiple queries separated by commas" : ""}
+            >
+              Crawl Multiple Queries
+            </button>
+            <div className={styles.searchHint}>
+              Enter a single search term or multiple terms separated by commas for concurrent crawling
             </div>
           </div>
+        </form>
+
+        {error && (
+          <div className={styles.error}>
+            <strong>Error:</strong> {error}
+          </div>
         )}
 
-        {result && !loading && activeTab === "videos" && (
-          <div className={styles.videoResults}>
-            {result.videos.length === 0 && (
-              <p className={styles.emptyMessage}>No videos found</p>
-            )}
-            <div className={styles.videoGrid}>
-              {result.videos.map((item, index) => (
-                <div key={`${item.url}-${index}`} className={styles.videoCard}>
-                  <a href={item.url} target="_blank" rel="noreferrer">
-                    <div className={styles.videoThumb}>
-                      {item.thumbnail ? (
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          loading="lazy"
-                          className={styles.videoImage}
-                        />
-                      ) : (
-                        <div className={styles.videoPlaceholder}>▶</div>
-                      )}
-                      {item.duration && (
-                        <span className={styles.videoDuration}>{item.duration}</span>
-                      )}
+         {results.length > 0 && (
+           <div className={styles.resultsContainer}>
+             <div className={styles.resultsHeader}>
+               <div className={styles.resultsTitleRow}>
+                 <h2 className={styles.resultsTitle}>
+                   {results.length > 1 ? "Crawl Results" : "Crawl Results"}
+                 </h2>
+                 <div className={styles.exportButtons}>
+                   <button
+                     onClick={handleExportCSV}
+                     className={styles.exportButton}
+                     disabled={!activeResult || activeResult.tweets.length === 0}
+                     title="Export current query tweets as CSV"
+                   >
+                     Export CSV
+                   </button>
+                   <button
+                     onClick={handleExportJSON}
+                     className={styles.exportButton}
+                     disabled={!activeResult || activeResult.tweets.length === 0}
+                     title="Export current query tweets as JSON"
+                   >
+                     Export JSON
+                   </button>
+                   {results.length > 1 && (
+                     <>
+                       <button
+                         onClick={handleExportAllCSV}
+                         className={styles.exportButton}
+                         title="Export all queries summary as CSV"
+                       >
+                         Export All Summary
+                       </button>
+                       <button
+                         onClick={handleExportAnalytics}
+                         className={styles.exportButton}
+                         title="Export analytics for all queries"
+                       >
+                         Export Analytics
+                       </button>
+                     </>
+                   )}
+                 </div>
+               </div>
+               {results.length > 1 && (
+                 <div className={styles.resultTabs}>
+                   {results.map((result, index) => (
+                     <button
+                       key={result.query}
+                       className={`${styles.resultTab} ${index === activeResultIndex ? styles.activeTab : ""}`}
+                       onClick={() => setActiveResultIndex(index)}
+                     >
+                       {result.query}
+                       <span className={styles.tweetCount}>
+                         ({result.tweets.length} tweets)
+                       </span>
+                     </button>
+                   ))}
+                 </div>
+               )}
+             </div>
+
+             {activeResult && (
+               <>
+                 <div className={styles.summary}>
+                   <h3>Summary</h3>
+                   <p>{activeResult.summary}</p>
+                   <div className={styles.meta}>
+                     <span>Crawled: {formatDate(activeResult.crawledAt)}</span>
+                      <span>Query: &quot;{activeResult.query}&quot;</span>
+                   </div>
+                 </div>
+
+                 {results.length > 1 && (
+                   <AnalyticsChart responses={results} />
+                 )}
+
+                 <div className={styles.tweetsGrid}>
+                  {activeResult.tweets.map((tweet) => (
+                    <div key={tweet.id} className={styles.tweetCard}>
+                      <div className={styles.tweetHeader}>
+                         {tweet.author.profileImageUrl && (
+                          <Image
+                            src={tweet.author.profileImageUrl}
+                            alt={tweet.author.name}
+                            width={48}
+                            height={48}
+                            className={styles.profileImage}
+                          />
+                        )}
+                        <div className={styles.authorInfo}>
+                          <div className={styles.authorName}>{tweet.author.name}</div>
+                          <div className={styles.authorUsername}>@{tweet.author.username}</div>
+                        </div>
+                        <a
+                          href={tweet.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.tweetLink}
+                        >
+                          View on X
+                        </a>
+                      </div>
+                      
+                      <div className={styles.tweetContent}>
+                        <p className={styles.tweetText}>{tweet.text}</p>
+                        
+                        {tweet.media && tweet.media.length > 0 && (
+                          <div className={styles.tweetMedia}>
+                            {tweet.media.map((media, index) => (
+                              <div key={index} className={styles.mediaItem}>
+                                 {media.type === "photo" ? (
+                                  <Image
+                                    src={media.url}
+                                    alt="Tweet media"
+                                    width={200}
+                                    height={150}
+                                    className={styles.mediaImage}
+                                  />
+                                ) : (
+                                  <div className={styles.mediaPlaceholder}>
+                                    {media.type.toUpperCase()} Media
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.tweetFooter}>
+                        <div className={styles.tweetStats}>
+                          <span className={styles.stat}>
+                            <span className={styles.statIcon}>💬</span>
+                            {tweet.replyCount}
+                          </span>
+                          <span className={styles.stat}>
+                            <span className={styles.statIcon}>🔄</span>
+                            {tweet.retweetCount}
+                          </span>
+                          <span className={styles.stat}>
+                            <span className={styles.statIcon}>❤️</span>
+                            {tweet.likeCount}
+                          </span>
+                          {tweet.quoteCount && (
+                            <span className={styles.stat}>
+                              <span className={styles.statIcon}>💬</span>
+                              {tweet.quoteCount}
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.tweetDate}>
+                          {formatDate(tweet.createdAt)}
+                        </div>
+                      </div>
                     </div>
-                  </a>
-                  <div className={styles.videoInfo}>
-                    <a href={item.url} className={styles.videoTitle} target="_blank" rel="noreferrer">
-                      {item.title}
-                    </a>
-                    <div className={styles.videoMeta}>
-                      <span className={styles.videoSource}>{item.source ?? getHost(item.url)}</span>
-                      {item.description && (
-                        <span className={styles.videoDescription}>{item.description}</span>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {result && !loading && activeTab === "news" && (
-          <div className={styles.newsResults}>
-            {result.news.length === 0 && (
-              <p className={styles.emptyMessage}>No news found</p>
+              </>
             )}
-            <div className={styles.newsGrid}>
-              {result.news.map((item, index) => (
-                <div key={`${item.url}-${index}`} className={styles.newsCard}>
-                  {item.image && (
-                    <a href={item.url} target="_blank" rel="noreferrer">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        loading="lazy"
-                        className={styles.newsImage}
-                      />
-                    </a>
-                  )}
-                  <div className={styles.newsInfo}>
-                    <div className={styles.newsSource}>{item.source ?? getHost(item.url)}</div>
-                    <a href={item.url} className={styles.newsTitle} target="_blank" rel="noreferrer">
-                      {item.title}
-                    </a>
-                    {item.snippet && <p className={styles.newsSnippet}>{item.snippet}</p>}
-                    {item.date && <div className={styles.newsDate}>{item.date}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
-        {result && result.web.length > 0 && (
-          <div className={styles.pagination}>
-            <div className={styles.blasterLogoSmall}>
-              <span className={styles.logoPixel}>B</span>
-              <span className={styles.logoPixel}>L</span>
-              <span className={styles.logoPixel}>A</span>
-              <span className={styles.logoPixel}>S</span>
-              <span className={styles.logoPixel}>T</span>
-              <span className={styles.logoPixel}>E</span>
-              <span className={styles.logoPixel}>R</span>
-            </div>
-            <div className={styles.paginationNumbers}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                <a key={num} href="#" className={styles.pageNumber}>
-                  {num}
-                </a>
-              ))}
-              <a href="#" className={styles.nextPage}>
-                NEXT
-              </a>
+        {!loading && results.length === 0 && !error && (
+          <div className={styles.placeholder}>
+            <div className={styles.placeholderIcon}>🐦</div>
+            <h3>Start Crawling Twitter/X</h3>
+            <p>
+              Enter a search term to crawl recent tweets. The crawler will analyze
+              who said what, when they said it, and provide a summary of the conversation.
+            </p>
+            <div className={styles.exampleQueries}>
+              <strong>Example queries:</strong>
+              <ul>
+                <li>artificial intelligence</li>
+                <li>elon musk, spacex, tesla</li>
+                <li>climate change conference</li>
+                <li>tech news, programming, web development</li>
+              </ul>
             </div>
           </div>
         )}
       </main>
-    );
-  };
 
-  const renderFooter = () => (
-    <footer className={styles.footer}>
-      <div className={styles.footerLocation}>
-        <span>United States</span>
-        <span className={styles.locationPin}>📍</span>
-        <span className={styles.locationText}>
-          <strong>Based on your past activity</strong> - Update location
-        </span>
-      </div>
-      <div className={styles.footerLinks}>
-        <div className={styles.footerColumn}>
-          <a href="#">Help</a>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-        </div>
-        <div className={styles.footerColumn}>
-          <a href="#">Advertising</a>
-          <a href="#">Business</a>
-          <a href="#">About</a>
-        </div>
-        <div className={styles.footerColumn}>
-          <a href="#">How Search works</a>
-        </div>
-      </div>
-      <div className={styles.signature}>
-        made by mfs from vit dudes
-      </div>
-    </footer>
-  );
-
-  return (
-    <div className={styles.page}>
-      {renderHeader()}
-      
-        {!showResults ? (
-        <div className={styles.homeContainer}>
-          <div className={styles.homeContent}>
-            {renderBlasterLogo()}
-            {renderSearchBar()}
-            <div className={styles.homeFooter}>
-              <p>Blaster Search - Pixelated Power</p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        renderResults()
-      )}
-      
-      {renderFooter()}
+      <footer className={styles.footer}>
+        <p>
+          Twitter/X Crawler • Real-time tweet analysis • Multiple concurrent crawlers
+        </p>
+        <p className={styles.disclaimer}>
+          This tool crawls publicly available tweets from Twitter/X. Rate limits apply.
+          Add your Twitter API credentials in .env.local to use.
+        </p>
+      </footer>
     </div>
   );
 }

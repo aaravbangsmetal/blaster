@@ -9,8 +9,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Google",
-  description: "Search the world's information, including webpages, images, videos and more.",
+  title: "Blaster - Twitter/X Crawler",
+  description: "Real-time Twitter/X crawler that identifies who said what. Analyze conversations, track trends, and monitor social media discussions.",
 };
 
 export default function RootLayout({
