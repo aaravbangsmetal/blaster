@@ -447,7 +447,7 @@ export default function Home() {
         </div>
       </div>
       <div className={styles.signature}>
-        BLASTER SEARCH • PIXELATED POWER • BLAST YOUR QUERIES
+        made by mfs from vit dudes
       </div>
     </footer>
   );
