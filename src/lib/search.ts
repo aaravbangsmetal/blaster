@@ -154,25 +154,8 @@ export const searchWeb = async (query: string): Promise<WebResult[]> => {
 
 export const searchImages = async (query: string): Promise<ImageResult[]> => {
   try {
-    // Use Unsplash API for free high-quality images
-    const response = await fetchWithTimeout(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${MAX_IMAGE_RESULTS}&client_id=YOUR_UNSPLASH_ACCESS_KEY`,
-      {
-        headers: {
-          ...SEARCH_HEADERS,
-          "Accept": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.error(`Unsplash API error: ${response.status}`);
-      // Fallback to Pexels API
-      return await searchImagesFallback(query);
-    }
-
-    const data = await response.json();
-    return processUnsplashResults(data.results || [], query);
+    // Try DuckDuckGo image search first (no API key required)
+    return await searchImagesDuckDuckGo(query);
   } catch (error) {
     console.error('Images search error:', error);
     return await searchImagesFallback(query);
@@ -219,6 +202,68 @@ const processUnsplashResults = (results: UnsplashItem[], query: string): ImageRe
   }
   
   console.log(`Found ${imageResults.length} images for query: ${query}`);
+  return imageResults;
+};
+
+const searchImagesDuckDuckGo = async (query: string): Promise<ImageResult[]> => {
+  try {
+    const response = await fetchWithTimeout(
+      `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`,
+      {
+        headers: {
+          ...SEARCH_HEADERS,
+          "Accept": "text/html",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`DuckDuckGo images error: ${response.status}`);
+      throw new Error('DuckDuckGo images failed');
+    }
+
+    const html = await response.text();
+    return parseImageResultsFromHtml(html, query);
+  } catch (error) {
+    console.error('DuckDuckGo images search error:', error);
+    throw error;
+  }
+};
+
+const parseImageResultsFromHtml = (html: string, query: string): ImageResult[] => {
+  const imageResults: ImageResult[] = [];
+  
+  // Extract image results from DuckDuckGo HTML
+  const imagePattern = /class="tile--img__img"[^>]+src="([^"]+)"[^>]*alt="([^"]+)"/gi;
+  const linkPattern = /class="tile--img"[^>]+data-id="([^"]+)"[^>]*>/gi;
+  
+  const imageMatches = Array.from(html.matchAll(imagePattern));
+  const linkMatches = Array.from(html.matchAll(linkPattern));
+  
+  for (let i = 0; i < Math.min(imageMatches.length, linkMatches.length, MAX_IMAGE_RESULTS); i++) {
+    const imageMatch = imageMatches[i];
+    const linkMatch = linkMatches[i];
+    
+    if (imageMatch && linkMatch) {
+      const imageUrl = imageMatch[1];
+      const altText = imageMatch[2];
+      const dataId = linkMatch[1];
+      
+      // Construct proper URLs
+      const fullImageUrl = imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl;
+      const pageUrl = `https://duckduckgo.com/i.js?q=${encodeURIComponent(query)}&vqd=${dataId}`;
+      
+      imageResults.push({
+        title: altText || `Image of ${query}`,
+        url: pageUrl,
+        image: fullImageUrl,
+        thumbnail: fullImageUrl,
+        source: 'DuckDuckGo',
+      });
+    }
+  }
+  
+  console.log(`Found ${imageResults.length} images from DuckDuckGo for query: ${query}`);
   return imageResults;
 };
 
@@ -288,7 +333,62 @@ const processPexelsResults = (photos: PexelsPhoto[], query: string): ImageResult
 
 const searchImagesFinalFallback = async (query: string): Promise<ImageResult[]> => {
   try {
-    // Final fallback: Use Lorem Picsum with deterministic images based on query
+    // Final fallback: Use Google Images via HTML scraping
+    const response = await fetchWithTimeout(
+      `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch`,
+      {
+        headers: {
+          ...SEARCH_HEADERS,
+          "Accept": "text/html",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`Google images fallback error: ${response.status}`);
+      return await searchImagesBasicFallback(query);
+    }
+
+    const html = await response.text();
+    return parseGoogleImageResults(html, query);
+  } catch (error) {
+    console.error('Final images fallback error:', error);
+    return await searchImagesBasicFallback(query);
+  }
+};
+
+const parseGoogleImageResults = (html: string, query: string): ImageResult[] => {
+  const imageResults: ImageResult[] = [];
+  
+  // Extract image URLs from Google Images search
+  const imagePattern = /"ou":"([^"]+)"/g;
+  const titlePattern = /"pt":"([^"]+)"/g;
+  
+  const imageUrls = Array.from(html.matchAll(imagePattern)).map(match => match[1]);
+  const titles = Array.from(html.matchAll(titlePattern)).map(match => match[1]);
+  
+  for (let i = 0; i < Math.min(imageUrls.length, titles.length, MAX_IMAGE_RESULTS); i++) {
+    if (imageUrls[i] && titles[i]) {
+      const imageUrl = decodeURIComponent(imageUrls[i]);
+      const title = decodeURIComponent(titles[i]);
+      
+      imageResults.push({
+        title: title || `Image of ${query}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch`,
+        image: imageUrl,
+        thumbnail: imageUrl,
+        source: 'Google Images',
+      });
+    }
+  }
+  
+  console.log(`Found ${imageResults.length} images from Google for query: ${query}`);
+  return imageResults;
+};
+
+const searchImagesBasicFallback = async (query: string): Promise<ImageResult[]> => {
+  try {
+    // Basic fallback: Use Lorem Picsum with search-based images
     const imageResults: ImageResult[] = [];
     const seed = hashString(query);
     
@@ -305,10 +405,10 @@ const searchImagesFinalFallback = async (query: string): Promise<ImageResult[]> 
       });
     }
     
-    console.log(`Using fallback images for query: ${query}`);
+    console.log(`Using basic fallback images for query: ${query}`);
     return imageResults;
   } catch (error) {
-    console.error('Final images fallback error:', error);
+    console.error('Basic images fallback error:', error);
     return [];
   }
 };
@@ -325,20 +425,60 @@ const hashString = (str: string): number => {
 
 export const searchVideos = async (query: string): Promise<VideoResult[]> => {
   try {
-    // Use YouTube Data API v3 (requires API key) or fallback to HTML scraping
-    // For now, use HTML scraping as primary since we don't have API key
-    return await searchVideosFallback(query);
+    // Try YouTube search first
+    return await searchVideosYouTube(query);
   } catch (error) {
     console.error('Videos search error:', error);
-    return [];
+    return await searchVideosFallback(query);
+  }
+};
+
+const searchVideosYouTube = async (query: string): Promise<VideoResult[]> => {
+  try {
+    const response = await fetchWithTimeout(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          ...SEARCH_HEADERS,
+          "Accept": "text/html",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`YouTube search error: ${response.status}`);
+      throw new Error('YouTube search failed');
+    }
+
+    const html = await response.text();
+    const results = parseVideoResultsFromHtml(html);
+    
+    if (results.length === 0) {
+      throw new Error('No videos found');
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('YouTube videos search error:', error);
+    throw error;
   }
 };
 
 const searchVideosFallback = async (query: string): Promise<VideoResult[]> => {
   try {
-    // Fallback: Search YouTube via HTML
+    // Try alternative video search: DuckDuckGo videos
+    return await searchVideosDuckDuckGo(query);
+  } catch (error) {
+    console.error('Video fallback error:', error);
+    return await searchVideosBasicFallback(query);
+  }
+};
+
+const searchVideosDuckDuckGo = async (query: string): Promise<VideoResult[]> => {
+  try {
     const response = await fetchWithTimeout(
-      `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+      `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=videos&ia=videos`,
       {
         headers: {
           ...SEARCH_HEADERS,
@@ -348,14 +488,74 @@ const searchVideosFallback = async (query: string): Promise<VideoResult[]> => {
     );
 
     if (!response.ok) {
-      console.error(`YouTube fallback error: ${response.status}`);
-      return [];
+      console.error(`DuckDuckGo videos error: ${response.status}`);
+      throw new Error('DuckDuckGo videos failed');
     }
 
     const html = await response.text();
-    return parseVideoResultsFromHtml(html);
+    return parseDuckDuckGoVideoResults(html, query);
   } catch (error) {
-    console.error('Video fallback error:', error);
+    console.error('DuckDuckGo videos search error:', error);
+    throw error;
+  }
+};
+
+const parseDuckDuckGoVideoResults = (html: string, query: string): VideoResult[] => {
+  const videoResults: VideoResult[] = [];
+  
+  // Extract video results from DuckDuckGo
+  const videoPattern = /class="tile--vid"[^>]*>([\s\S]*?)<\/div>/gi;
+  const videoMatches = html.matchAll(videoPattern);
+  
+  for (const match of videoMatches) {
+    if (videoResults.length >= MAX_VIDEO_RESULTS) break;
+    
+    const videoHtml = match[1];
+    
+    // Extract title
+    const titleMatch = videoHtml.match(/class="tile__title"[^>]*>([\s\S]*?)<\/div>/);
+    if (!titleMatch) continue;
+    
+    const title = stripTags(titleMatch[1]);
+    
+    // Extract URL
+    const urlMatch = videoHtml.match(/href="([^"]+)"/);
+    if (!urlMatch) continue;
+    
+    const url = resolveDuckDuckGoUrl(urlMatch[1]);
+    
+    // Extract thumbnail
+    const thumbMatch = videoHtml.match(/src="([^"]+)"/);
+    const thumbnail = thumbMatch ? (thumbMatch[1].startsWith('//') ? `https:${thumbMatch[1]}` : thumbMatch[1]) : undefined;
+    
+    // Extract source
+    const sourceMatch = videoHtml.match(/class="tile__domain"[^>]*>([\s\S]*?)<\/span>/);
+    const source = sourceMatch ? stripTags(sourceMatch[1]) : 'Video';
+    
+    // Extract duration
+    const durationMatch = videoHtml.match(/class="tile__duration"[^>]*>([\s\S]*?)<\/span>/);
+    const duration = durationMatch ? stripTags(durationMatch[1]) : undefined;
+    
+    videoResults.push({
+      title: title,
+      url: url,
+      thumbnail: thumbnail,
+      source: source,
+      duration: duration,
+    });
+  }
+  
+  console.log(`Found ${videoResults.length} videos from DuckDuckGo for query: ${query}`);
+  return videoResults;
+};
+
+const searchVideosBasicFallback = async (query: string): Promise<VideoResult[]> => {
+  try {
+    // Basic fallback: Return empty array or minimal results
+    console.log(`Using basic video fallback for query: ${query}`);
+    return [];
+  } catch (error) {
+    console.error('Basic video fallback error:', error);
     return [];
   }
 };
@@ -363,25 +563,77 @@ const searchVideosFallback = async (query: string): Promise<VideoResult[]> => {
 const parseVideoResultsFromHtml = (html: string): VideoResult[] => {
   const videoResults: VideoResult[] = [];
   
-  // Extract video IDs from YouTube search page
-  const videoIdPattern = /"videoId":"([^"]+)"/g;
-  const titlePattern = /"title":{"runs":\[{"text":"([^"]+)"}\]/g;
+  // Improved parsing for YouTube search results
+  // Look for video renderer objects in the JSON data
+  const videoRendererPattern = /"videoRenderer":\{([^}]+(?:\{[^{}]*\}[^}]*)*)\}/g;
   
-  const videoIds = Array.from(html.matchAll(videoIdPattern)).map(match => match[1]);
-  const titles = Array.from(html.matchAll(titlePattern)).map(match => match[1]);
+  let match;
+  const seenVideoIds = new Set<string>();
   
-  for (let i = 0; i < Math.min(videoIds.length, titles.length, MAX_VIDEO_RESULTS); i++) {
-    if (videoIds[i] && titles[i]) {
-      const videoUrl = `https://www.youtube.com/watch?v=${videoIds[i]}`;
-      videoResults.push({
-        title: cleanupText(titles[i]),
-        url: videoUrl,
-        thumbnail: `https://img.youtube.com/vi/${videoIds[i]}/hqdefault.jpg`,
-        source: 'YouTube',
-      });
+  while ((match = videoRendererPattern.exec(html)) !== null && videoResults.length < MAX_VIDEO_RESULTS) {
+    const videoRenderer = match[1];
+    
+    // Extract video ID
+    const videoIdMatch = videoRenderer.match(/"videoId":"([^"]+)"/);
+    if (!videoIdMatch) continue;
+    
+    const videoId = videoIdMatch[1];
+    if (seenVideoIds.has(videoId)) continue; // Skip duplicates
+    seenVideoIds.add(videoId);
+    
+    // Extract title
+    const titleMatch = videoRenderer.match(/"title":\{"runs":\[\{"text":"([^"]+)"\}\]/);
+    if (!titleMatch) continue;
+    
+    const title = cleanupText(decodeHtmlEntities(titleMatch[1]));
+    
+    // Extract channel name
+    const channelMatch = videoRenderer.match(/"ownerText":\{"runs":\[\{"text":"([^"]+)"\}\]/);
+    const channel = channelMatch ? cleanupText(decodeHtmlEntities(channelMatch[1])) : 'YouTube';
+    
+    // Extract duration if available
+    const durationMatch = videoRenderer.match(/"lengthText":\{"accessibility":\{"accessibilityData":\{"label":"([^"]+)"\}/);
+    const duration = durationMatch ? durationMatch[1] : undefined;
+    
+    // Extract view count if available
+    const viewCountMatch = videoRenderer.match(/"viewCountText":\{"simpleText":"([^"]+)"\}/);
+    const viewCount = viewCountMatch ? viewCountMatch[1] : undefined;
+    
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const description = viewCount ? `${channel} • ${viewCount}` : channel;
+    
+    videoResults.push({
+      title: title,
+      url: videoUrl,
+      thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      source: 'YouTube',
+      duration: duration,
+      description: description,
+    });
+  }
+  
+  // If we didn't find enough results with the new method, fall back to old method
+  if (videoResults.length < MAX_VIDEO_RESULTS) {
+    const videoIdPattern = /"videoId":"([^"]+)"/g;
+    const titlePattern = /"title":{"runs":\[{"text":"([^"]+)"}\]/g;
+    
+    const videoIds = Array.from(html.matchAll(videoIdPattern)).map(match => match[1]);
+    const titles = Array.from(html.matchAll(titlePattern)).map(match => match[1]);
+    
+    for (let i = 0; i < Math.min(videoIds.length, titles.length, MAX_VIDEO_RESULTS - videoResults.length); i++) {
+      if (videoIds[i] && titles[i] && !seenVideoIds.has(videoIds[i])) {
+        const videoUrl = `https://www.youtube.com/watch?v=${videoIds[i]}`;
+        videoResults.push({
+          title: cleanupText(titles[i]),
+          url: videoUrl,
+          thumbnail: `https://img.youtube.com/vi/${videoIds[i]}/hqdefault.jpg`,
+          source: 'YouTube',
+        });
+      }
     }
   }
   
+  console.log(`Found ${videoResults.length} unique videos`);
   return videoResults;
 };
 
