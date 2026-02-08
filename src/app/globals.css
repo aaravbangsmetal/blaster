@@ -1,36 +1,65 @@
 :root {
-  --bg: #ffffff;
-  --text: #202124;
-  --muted: #70757a;
-  --line: #dadce0;
+  /* 2005 Facebook Color Palette - Cartoonish Pixelated */
+  --bg: #f0f2f5;
+  --bg-alt: #ffffff;
+  --text: #1c1e21;
+  --muted: #65676b;
+  --line: #dddfe2;
   --card: #ffffff;
-  --primary: #1a73e8;
-  --secondary: #4285f4;
-  --accent: #34a853;
-  --error: #d93025;
-  --tab-active: #e8f0fe;
-  --shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-  --shadow-soft: 0 1px 3px rgba(32, 33, 36, 0.1);
-  --logo-blue: #00a8ff;
-  --logo-red: #ff3e3e;
-  --logo-yellow: #ffd700;
-  --logo-green: #00ff88;
-  --logo-purple: #9c27b0;
-  --logo-cyan: #00bcd4;
-  --logo-orange: #ff9800;
-  --font-roboto: "Roboto", "Arial", sans-serif;
-  --font-pixel: "Courier New", "Monaco", monospace;
-  --font-size-small: 12px;
-  --font-size-medium: 14px;
-  --font-size-large: 16px;
-  --font-size-xlarge: 20px;
+  --primary: #1877f2; /* Facebook blue */
+  --secondary: #42b72a; /* Facebook green */
+  --accent: #f02849; /* Facebook red */
+  --warning: #f7b928; /* Facebook yellow */
+  --tab-active: #e7f3ff;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-pixel: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  --shadow-pixel-inset: inset 2px 2px 0px rgba(0, 0, 0, 0.1);
+  
+  /* Pixelated Logo Colors - Cartoonish Bright */
+  --logo-blue: #0084ff;
+  --logo-red: #ff3b5c;
+  --logo-yellow: #ffd400;
+  --logo-green: #00cf35;
+  --logo-purple: #b026ff;
+  --logo-cyan: #00d4ff;
+  --logo-orange: #ff6b00;
+  --logo-pink: #ff2d95;
+  
+  /* Early Facebook Fonts */
+  --font-main: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-pixel: "Courier New", "Monaco", "Lucida Console", monospace;
+  --font-cartoon: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  
+  /* Pixelated Sizes */
+  --font-size-small: 11px;
+  --font-size-medium: 13px;
+  --font-size-large: 15px;
+  --font-size-xlarge: 18px;
+  --font-size-xxlarge: 24px;
+  
+  /* Pixelated Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --border-radius: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  
+  /* Pixelated Borders */
+  --border-radius: 6px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 8px;
   --border-radius-full: 999px;
+  --border-pixel: 2px solid #000;
+  --border-pixel-light: 1px solid #000;
+  
+  /* Scanline Effect */
+  --scanline-color: rgba(0, 0, 0, 0.05);
+  --scanline-size: 2px;
+  
+  /* Pixel Grid */
+  --pixel-size: 4px;
 }
 
 * {
@@ -49,12 +78,24 @@ body {
 body {
   color: var(--text);
   background: var(--bg);
-  font-family: var(--font-roboto);
-  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-main);
+  -webkit-font-smoothing: none; /* Pixelated look */
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
-  line-height: 1.5;
+  line-height: 1.4;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  
+  /* Scanline effect for retro feel */
+  background-image: 
+    linear-gradient(
+      to bottom,
+      transparent 95%,
+      var(--scanline-color) 100%
+    );
+  background-size: 100% var(--scanline-size);
 }
 
 a {
@@ -89,7 +130,164 @@ input {
   background: #b7c0ce;
 }
 
-.retro-border {
+/* Pixelated UI Components */
+.pixel-border {
+  border: var(--border-pixel-light);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-pixel);
+  position: relative;
+}
+
+.pixel-border::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius-sm);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pixel-button {
+  font-family: var(--font-pixel);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: var(--border-pixel);
+  border-radius: var(--border-radius-sm);
+  background: linear-gradient(to bottom, #fff, #f0f0f0);
+  box-shadow: var(--shadow-pixel);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pixel-button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.pixel-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.pixel-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.05) 100%);
+  pointer-events: none;
+}
+
+/* Pixelated Input */
+.pixel-input {
+  font-family: var(--font-pixel);
+  border: var(--border-pixel);
+  border-radius: var(--border-radius-sm);
+  background: white;
+  box-shadow: var(--shadow-pixel-inset);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.pixel-input:focus {
+  outline: none;
+  box-shadow: 
+    var(--shadow-pixel-inset),
+    0 0 0 2px var(--primary);
+}
+
+/* Pixel Grid Background */
+.pixel-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: var(--pixel-size) var(--pixel-size);
+}
+
+/* Cartoonish Elements */
+.cartoon-text {
+  font-family: var(--font-cartoon);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+}
+
+.cartoon-bubble {
+  background: white;
+  border: var(--border-pixel);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-pixel);
+  padding: var(--spacing-md);
+  position: relative;
+}
+
+.cartoon-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 20px;
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: white transparent transparent;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.2));
+}
+
+.cartoon-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 19px;
+  border-width: 12px 12px 0;
+  border-style: solid;
+  border-color: black transparent transparent;
+  z-index: -1;
+}
+
+/* 2005 Facebook-style Card */
+.fb-card {
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-soft);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.fb-card-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-weight: bold;
+  color: var(--primary);
+}
+
+/* Retro Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e4e6eb;
+  border: 1px solid #bcc0c4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8a8d91;
+  border: 1px solid #606770;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #65676b;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f0f2f5;
 }
