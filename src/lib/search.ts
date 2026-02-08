@@ -139,48 +139,7 @@ const parseWebResultsFromHtml = (html: string) => {
   return Array.from(deduped.values()).slice(0, MAX_WEB_RESULTS);
 };
 
-const extractVqd = (html: string) => {
-  const match = html.match(/vqd=['"]([^'"]+)['"]/i);
-  return match?.[1] ?? null;
-};
 
-const fetchVqd = async (query: string, ia = "web") => {
-  try {
-    const response = await fetchWithTimeout(
-      `https://duckduckgo.com/?q=${encodeURIComponent(query)}&ia=${ia}&kl=us-en`,
-      {
-        headers: {
-          ...SEARCH_HEADERS,
-          "Accept": "text/html",
-        },
-      }
-    );
-    if (!response.ok) {
-      console.error(`VQD fetch failed: ${response.status} ${response.statusText}`);
-      return null;
-    }
-    const text = await response.text();
-    const vqd = extractVqd(text);
-    if (!vqd) {
-      console.error('VQD token not found in response');
-      // Try alternative pattern
-      const altMatch = text.match(/vqd=([^&"']+)/i);
-      if (altMatch?.[1]) {
-        console.log('Found VQD with alternative pattern:', altMatch[1]);
-        return altMatch[1];
-      }
-    }
-    return vqd;
-  } catch (error) {
-    console.error('VQD fetch error:', error);
-    return null;
-  }
-};
-
-const toNumber = (value: unknown) => {
-  const num = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(num) ? num : undefined;
-};
 
 export const searchWeb = async (query: string): Promise<WebResult[]> => {
   const response = await fetchWithTimeout(
@@ -220,7 +179,25 @@ export const searchImages = async (query: string): Promise<ImageResult[]> => {
   }
 };
 
-const processUnsplashResults = (results: any[], query: string): ImageResult[] => {
+interface UnsplashItem {
+  urls?: {
+    regular: string;
+    small?: string;
+    thumb?: string;
+  };
+  links?: {
+    html: string;
+  };
+  description?: string;
+  alt_description?: string;
+  user?: {
+    name?: string;
+  };
+  width?: number;
+  height?: number;
+}
+
+const processUnsplashResults = (results: UnsplashItem[], query: string): ImageResult[] => {
   const imageResults: ImageResult[] = [];
   
   for (const item of results) {
@@ -273,7 +250,19 @@ const searchImagesFallback = async (query: string): Promise<ImageResult[]> => {
   }
 };
 
-const processPexelsResults = (photos: any[], query: string): ImageResult[] => {
+interface PexelsPhoto {
+  src?: {
+    large: string;
+    medium?: string;
+  };
+  url?: string;
+  alt?: string;
+  photographer?: string;
+  width?: number;
+  height?: number;
+}
+
+const processPexelsResults = (photos: PexelsPhoto[], query: string): ImageResult[] => {
   const imageResults: ImageResult[] = [];
   
   for (const photo of photos) {
@@ -364,14 +353,14 @@ const searchVideosFallback = async (query: string): Promise<VideoResult[]> => {
     }
 
     const html = await response.text();
-    return parseVideoResultsFromHtml(html, query);
+    return parseVideoResultsFromHtml(html);
   } catch (error) {
     console.error('Video fallback error:', error);
     return [];
   }
 };
 
-const parseVideoResultsFromHtml = (html: string, query: string): VideoResult[] => {
+const parseVideoResultsFromHtml = (html: string): VideoResult[] => {
   const videoResults: VideoResult[] = [];
   
   // Extract video IDs from YouTube search page
@@ -396,17 +385,7 @@ const parseVideoResultsFromHtml = (html: string, query: string): VideoResult[] =
   return videoResults;
 };
 
-const formatDuration = (seconds: number): string => {
-  if (!seconds) return '';
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
-};
+
 
 export const searchNews = async (query: string): Promise<NewsResult[]> => {
   try {
@@ -491,14 +470,14 @@ const searchNewsFallback = async (query: string): Promise<NewsResult[]> => {
     }
 
     const html = await response.text();
-    return parseNewsFromHtml(html, query);
+    return parseNewsFromHtml(html);
   } catch (error) {
     console.error('News fallback error:', error);
     return [];
   }
 };
 
-const parseNewsFromHtml = (html: string, query: string): NewsResult[] => {
+const parseNewsFromHtml = (html: string): NewsResult[] => {
   const newsResults: NewsResult[] = [];
   
   // Extract news articles from HTML

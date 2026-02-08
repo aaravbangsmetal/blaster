@@ -167,9 +167,9 @@ export default function Home() {
         <button className={styles.blasterButton} type="submit" disabled={loading}>
           {loading ? "BLASTING..." : "BLAST SEARCH"}
         </button>
-        <button className={styles.luckyButton} type="button">
-          I'M FEELING BLASTED
-        </button>
+          <button className={styles.luckyButton} type="button">
+            I&apos;M FEELING BLASTED
+          </button>
       </div>
     </form>
   );
@@ -194,7 +194,12 @@ export default function Home() {
                 aria-label="Search"
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
-                    handleSubmit(event as any);
+                    event.preventDefault();
+                    const form = event.currentTarget.closest('form');
+                    if (form) {
+                      const formEvent = new Event('submit', { bubbles: true, cancelable: true });
+                      form.dispatchEvent(formEvent);
+                    }
                   }
                 }}
               />
@@ -272,7 +277,7 @@ export default function Home() {
             {result.web.length === 0 && (
               <p className={styles.emptyMessage}>No results found</p>
             )}
-            {result.web.map((item, index) => (
+             {result.web.map((item) => (
               <div key={item.url} className={styles.resultItem}>
                 <div className={styles.resultUrl}>
                   <span className={styles.resultFavicon}>🌐</span>
