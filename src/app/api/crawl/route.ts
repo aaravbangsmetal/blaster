@@ -1,22 +1,16 @@
 import { NextResponse } from "next/server";
-import WebSearchEngine from "@/lib/web-search-engine";
-import WebSearchEngineMock from "@/lib/web-search-engine-mock";
+import WebSearchEngine from "@/lib/web-search-engine-v2";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getSearchEngine() {
-  const apiKey = process.env.SEARCH_API_KEY;
-  if (apiKey && apiKey.trim() !== '') {
-    try {
-      return new WebSearchEngine();
-    } catch (error) {
-      console.log('Failed to create WebSearchEngine, falling back to mock:', error);
-      return new WebSearchEngineMock();
-    }
+  try {
+    return new WebSearchEngine();
+  } catch (error) {
+    console.log('Failed to create WebSearchEngine:', error);
+    throw error;
   }
-  console.log('Using WebSearchEngineMock (no API key found)');
-  return new WebSearchEngineMock();
 }
 
 export async function POST(request: Request) {
