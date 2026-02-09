@@ -1,22 +1,23 @@
 :root {
-  /* 2005 Facebook Color Palette - Cartoonish Pixelated */
-  --bg: #f0f2f5;
-  --bg-alt: #ffffff;
-  --text: #1c1e21;
-  --muted: #65676b;
-  --line: #dddfe2;
-  --card: #ffffff;
-  --primary: #1877f2; /* Facebook blue */
-  --secondary: #42b72a; /* Facebook green */
-  --accent: #f02849; /* Facebook red */
-  --warning: #f7b928; /* Facebook yellow */
-  --tab-active: #e7f3ff;
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-pixel: 2px 2px 0px rgba(0, 0, 0, 0.2);
-  --shadow-pixel-inset: inset 2px 2px 0px rgba(0, 0, 0, 0.1);
+  /* Modern Sexy Color Palette - Neon Cyberpunk */
+  --bg: #0a0a0f;
+  --bg-alt: #11111a;
+  --text: #ffffff;
+  --muted: #a0a0c0;
+  --line: #2a2a3a;
+  --card: #1a1a2a;
+  --primary: #00d4ff; /* Neon cyan */
+  --secondary: #ff2d95; /* Neon pink */
+  --accent: #ff6b00; /* Neon orange */
+  --warning: #ffd400; /* Neon yellow */
+  --success: #00cf35; /* Neon green */
+  --tab-active: rgba(0, 212, 255, 0.15);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1);
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-pixel: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(255, 45, 149, 0.2);
+  --shadow-pixel-inset: inset 0 0 20px rgba(0, 0, 0, 0.5);
   
-  /* Pixelated Logo Colors - Cartoonish Bright */
+  /* Neon Logo Colors - Cyberpunk */
   --logo-blue: #0084ff;
   --logo-red: #ff3b5c;
   --logo-yellow: #ffd400;
@@ -26,40 +27,58 @@
   --logo-orange: #ff6b00;
   --logo-pink: #ff2d95;
   
-  /* Early Facebook Fonts */
-  --font-main: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-  --font-pixel: "Courier New", "Monaco", "Lucida Console", monospace;
-  --font-cartoon: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+  /* Modern Fonts */
+  --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-pixel: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
+  --font-cartoon: "Poppins", "Montserrat", sans-serif;
   
-  /* Pixelated Sizes */
-  --font-size-small: 11px;
-  --font-size-medium: 13px;
-  --font-size-large: 15px;
-  --font-size-xlarge: 18px;
-  --font-size-xxlarge: 24px;
+  /* Modern Sizes */
+  --font-size-small: 12px;
+  --font-size-medium: 14px;
+  --font-size-large: 16px;
+  --font-size-xlarge: 20px;
+  --font-size-xxlarge: 32px;
+  --font-size-xxxlarge: 48px;
   
-  /* Pixelated Spacing */
+  /* Modern Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
-  --spacing-xxl: 32px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
   
-  /* Pixelated Borders */
-  --border-radius: 6px;
-  --border-radius-sm: 4px;
-  --border-radius-lg: 8px;
+  /* Modern Borders */
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
   --border-radius-full: 999px;
-  --border-pixel: 2px solid #000;
-  --border-pixel-light: 1px solid #000;
+  --border-pixel: 1px solid rgba(0, 212, 255, 0.3);
+  --border-pixel-light: 1px solid rgba(255, 255, 255, 0.1);
   
-  /* Scanline Effect */
-  --scanline-color: rgba(0, 0, 0, 0.05);
-  --scanline-size: 2px;
+  /* Glow Effects */
+  --glow-primary: 0 0 20px rgba(0, 212, 255, 0.5);
+  --glow-secondary: 0 0 20px rgba(255, 45, 149, 0.5);
+  --glow-accent: 0 0 20px rgba(255, 107, 0, 0.5);
   
-  /* Pixel Grid */
-  --pixel-size: 4px;
+  /* Gradient Backgrounds */
+  --gradient-bg: linear-gradient(135deg, #0a0a0f 0%, #1a1a2a 50%, #0a0a0f 100%);
+  --gradient-card: linear-gradient(145deg, #1a1a2a 0%, #222235 100%);
+  --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0084ff 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff2d95 0%, #b026ff 100%);
+  --gradient-accent: linear-gradient(135deg, #ff6b00 0%, #ffd400 100%);
+  
+  /* Scanline Effect - Enhanced */
+  --scanline-color: rgba(0, 212, 255, 0.05);
+  --scanline-size: 4px;
+  
+  /* Pixel Grid - Enhanced */
+  --pixel-size: 8px;
+  
+  /* Animation Speeds */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
 }
 
 * {
@@ -77,25 +96,72 @@ body {
 
 body {
   color: var(--text);
-  background: var(--bg);
+  background: var(--gradient-bg);
   font-family: var(--font-main);
-  -webkit-font-smoothing: none; /* Pixelated look */
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
-  line-height: 1.4;
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
   
-  /* Scanline effect for retro feel */
+  /* Cyberpunk scanline effect */
   background-image: 
     linear-gradient(
       to bottom,
       transparent 95%,
       var(--scanline-color) 100%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(0, 212, 255, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 45, 149, 0.05) 0%,
+      transparent 50%
     );
-  background-size: 100% var(--scanline-size);
+  background-size: 100% var(--scanline-size), 100% 100%, 100% 100%;
+  background-attachment: fixed;
+  
+  /* Animated gradient overlay */
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(0, 212, 255, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 45, 149, 0.03) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+  z-index: -1;
+  animation: pulse 20s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
 }
 
 a {
@@ -130,78 +196,140 @@ input {
   background: #b7c0ce;
 }
 
-/* Pixelated UI Components */
-.pixel-border {
-  border: var(--border-pixel-light);
-  border-radius: var(--border-radius-sm);
-  box-shadow: var(--shadow-pixel);
-  position: relative;
-}
-
-.pixel-border::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: -2px;
-  bottom: -2px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: var(--border-radius-sm);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.pixel-button {
-  font-family: var(--font-pixel);
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+/* Modern Sexy UI Components */
+.glass-card {
+  background: rgba(26, 26, 42, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: var(--border-pixel);
-  border-radius: var(--border-radius-sm);
-  background: linear-gradient(to bottom, #fff, #f0f0f0);
-  box-shadow: var(--shadow-pixel);
-  cursor: pointer;
-  transition: all 0.1s ease;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+  transition: all var(--transition-normal) ease;
 }
 
-.pixel-button:hover {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
-}
-
-.pixel-button:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-}
-
-.pixel-button::after {
+.glass-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 212, 255, 0.05) 0%,
+    rgba(255, 45, 149, 0.05) 100%
+  );
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Pixelated Input */
-.pixel-input {
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-pixel);
+}
+
+.neon-button {
   font-family: var(--font-pixel);
-  border: var(--border-pixel);
-  border-radius: var(--border-radius-sm);
-  background: white;
-  box-shadow: var(--shadow-pixel-inset);
-  padding: var(--spacing-sm) var(--spacing-md);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--glow-primary);
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  position: relative;
+  overflow: hidden;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-medium);
 }
 
-.pixel-input:focus {
+.neon-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 0 60px rgba(0, 212, 255, 0.3);
+}
+
+.neon-button:active {
+  transform: translateY(0);
+}
+
+.neon-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.neon-button:hover::before {
+  left: 100%;
+}
+
+.neon-button.secondary {
+  background: var(--gradient-secondary);
+  box-shadow: var(--glow-secondary);
+}
+
+.neon-button.secondary:hover {
+  box-shadow: 0 0 30px rgba(255, 45, 149, 0.6), 0 0 60px rgba(255, 45, 149, 0.3);
+}
+
+.neon-button.accent {
+  background: var(--gradient-accent);
+  box-shadow: var(--glow-accent);
+}
+
+.neon-button.accent:hover {
+  box-shadow: 0 0 30px rgba(255, 107, 0, 0.6), 0 0 60px rgba(255, 107, 0, 0.3);
+}
+
+/* Modern Sexy Input */
+.neon-input {
+  font-family: var(--font-main);
+  border: var(--border-pixel);
+  border-radius: var(--border-radius);
+  background: rgba(26, 26, 42, 0.8);
+  color: var(--text);
+  box-shadow: var(--shadow-pixel-inset);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-large);
+  transition: all var(--transition-normal) ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.neon-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.neon-input:focus {
   outline: none;
+  border-color: var(--primary);
   box-shadow: 
     var(--shadow-pixel-inset),
-    0 0 0 2px var(--primary);
+    var(--glow-primary),
+    0 0 0 1px rgba(0, 212, 255, 0.3);
+  background: rgba(26, 26, 42, 0.9);
+}
+
+.neon-input:hover:not(:focus) {
+  border-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 
+    var(--shadow-pixel-inset),
+    0 0 20px rgba(0, 212, 255, 0.1);
 }
 
 /* Pixel Grid Background */

@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
-import TwitterCrawler from "@/lib/twitter-crawler";
-import TwitterCrawlerMock from "@/lib/twitter-crawler-mock";
+import WebSearchEngine from "@/lib/web-search-engine";
+import WebSearchEngineMock from "@/lib/web-search-engine-mock";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function getCrawler() {
-  const bearerToken = process.env.TWITTER_BEARER_TOKEN;
-  if (bearerToken && bearerToken.trim() !== '') {
+function getSearchEngine() {
+  const apiKey = process.env.SEARCH_API_KEY;
+  if (apiKey && apiKey.trim() !== '') {
     try {
-      return new TwitterCrawler();
+      return new WebSearchEngine();
     } catch (error) {
-      console.log('Failed to create TwitterCrawler, falling back to mock:', error);
-      return new TwitterCrawlerMock();
+      console.log('Failed to create WebSearchEngine, falling back to mock:', error);
+      return new WebSearchEngineMock();
     }
   }
-  console.log('Using TwitterCrawlerMock (no bearer token found)');
-  return new TwitterCrawlerMock();
+  console.log('Using WebSearchEngineMock (no API key found)');
+  return new WebSearchEngineMock();
 }
 
 export async function POST(request: Request) {
@@ -26,35 +26,35 @@ export async function POST(request: Request) {
     const queries = Array.isArray(body?.queries) ? body.queries.map((q: unknown) => String(q).trim()).filter(Boolean) : [];
 
     if (!query && queries.length === 0) {
-      return NextResponse.json({ error: "Query or queries are required." }, { status: 400 });
+      return NextResponse.json({ error: "Search query is required." }, { status: 400 });
     }
 
-    const crawler = getCrawler();
+    const searchEngine = getSearchEngine();
     let results;
 
     if (queries.length > 0) {
-      results = await crawler.crawlMultipleQueries(queries);
+      results = await searchEngine.searchMultipleQueries(queries);
     } else {
-      const tweets = await crawler.searchTweets(query);
-      const summary = "Generated summary for query: " + query;
+      const searchResults = await searchEngine.searchWeb(query);
+      const summary = `Found ${searchResults.length} results for: ${query}`;
       
       results = [{
         query,
-        tweets,
+        results: searchResults,
         summary,
-        crawledAt: new Date().toISOString(),
+        searchedAt: new Date().toISOString(),
       }];
     }
 
     return NextResponse.json({
       success: true,
       results,
-      totalCrawls: results.length,
-      crawledAt: new Date().toISOString(),
+      totalSearches: results.length,
+      searchedAt: new Date().toISOString(),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Crawl failed.";
-    console.error("Twitter crawl error:", error);
+    const message = error instanceof Error ? error.message : "Search failed.";
+    console.error("Web search error:", error);
     return NextResponse.json({ 
       success: false, 
       error: message,
@@ -68,27 +68,27 @@ export async function GET(request: Request) {
   const query = url.searchParams.get("query");
   
   if (!query) {
-    return NextResponse.json({ error: "Query parameter is required." }, { status: 400 });
+    return NextResponse.json({ error: "Search query parameter is required." }, { status: 400 });
   }
 
   try {
-    const crawler = getCrawler();
-    const tweets = await crawler.searchTweets(query);
-    const summary = "Generated summary for query: " + query;
+    const searchEngine = getSearchEngine();
+    const searchResults = await searchEngine.searchWeb(query);
+    const summary = `Found ${searchResults.length} results for: ${query}`;
     
     return NextResponse.json({
       success: true,
       results: [{
         query,
-        tweets,
+        results: searchResults,
         summary,
-        crawledAt: new Date().toISOString(),
+        searchedAt: new Date().toISOString(),
       }],
-      totalCrawls: 1,
-      crawledAt: new Date().toISOString(),
+      totalSearches: 1,
+      searchedAt: new Date().toISOString(),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Crawl failed.";
+    const message = error instanceof Error ? error.message : "Search failed.";
     return NextResponse.json({ 
       success: false, 
       error: message,

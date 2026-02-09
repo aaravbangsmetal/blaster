@@ -156,10 +156,12 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Twitter/X Crawler</h1>
-        <p className={styles.subtitle}>
-          Search and analyze tweets in real-time. See who said what and when.
-        </p>
+        <div>
+          <h1 className={styles.title}>BLASTER</h1>
+          <p className={styles.subtitle}>
+            Cyberpunk Twitter/X Crawler • Real-time tweet analysis • Neon-powered insights
+          </p>
+        </div>
       </header>
 
       <main className={styles.main}>
@@ -169,7 +171,7 @@ export default function Home() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tweets or enter multiple queries separated by commas..."
+              placeholder="Enter search terms... (use commas for multiple queries)"
               className={styles.searchInput}
               disabled={loading}
             />
@@ -178,7 +180,7 @@ export default function Home() {
               className={styles.searchButton}
               disabled={loading || !query.trim()}
             >
-              {loading ? "Crawling..." : "Search Tweets"}
+              {loading ? "⚡ CRAWLING..." : "🚀 LAUNCH CRAWL"}
             </button>
           </div>
           <div className={styles.searchOptions}>
